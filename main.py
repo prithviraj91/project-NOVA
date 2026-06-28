@@ -1,10 +1,26 @@
-from ai.brain import process_command
+from core.assistant import assistant
+from core.startup import initialize
 
-while True:
 
-    command = input("You: ")
+def main():
 
-    if command.lower() == "exit":
-        break
+    initialize()
 
-    process_command(command)
+    print("\nNOVA OS is ready.\n")
+
+    while True:
+
+        command = input("You: ").strip()
+
+        if not command:
+            continue
+
+        if command.lower() in ["exit", "quit"]:
+            print("\nNOVA: Goodbye, Prithvi!\n")
+            break
+
+        assistant.process(command)
+
+
+if __name__ == "__main__":
+    main()

@@ -27,23 +27,16 @@ def chat(prompt):
 
     system_prompt = load_personality()
 
-    # Automatically save important information
-    engine.process(prompt)
-
-    # Add relevant memories
     ctx = context.build(prompt)
 
-    full_prompt = f""" 
-
+    full_prompt = f"""
     Known facts:
-
-    {ctx["memory"]}
-
-    User:
     
-    {ctx["prompt"]}
-
-    """
+    {ctx['memory']}
+    
+    User:
+    {ctx['prompt']}
+"""
 
 
     # First message

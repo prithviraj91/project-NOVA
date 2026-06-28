@@ -1,19 +1,22 @@
 class Router:
 
     def __init__(self):
-
         self.skills = []
 
     def register(self, skill):
-
         self.skills.append(skill)
 
-    def process(self, command):
+    def route(self, command):
 
         for skill in self.skills:
 
-            if skill.handle(command):
-                return True
+            try:
+
+                if skill.handle(command):
+                    return True
+
+            except Exception as e:
+                print(f"Router Error: {e}")
 
         return False
 
