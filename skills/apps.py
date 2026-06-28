@@ -1,10 +1,9 @@
 import json
 import os
+from difflib import SequenceMatcher
 
-
-def load_apps():
-    with open("data/installed_apps.json", "r", encoding="utf-8") as file:
-        return json.load(file)
+from core.logger import logger
+from core.events import events
 
 
 OPEN_WORDS = (
@@ -15,33 +14,83 @@ OPEN_WORDS = (
 )
 
 
-def handle(command):
+def similarity(a, b):
+    return SequenceMatcher(None, a, b).ratio()
 
-    command = command.lower().strip()
 
-    # Only continue if user intends to open something
-    if not command.startswith(OPEN_WORDS):
-        return False
+class AppsSkill:
 
-    # Remove the opening verb
-    for word in OPEN_WORDS:
-        if command.startswith(word):
-            app_name = command[len(word):].strip()
-            break
+    def __init__(self):
+        self.apps = self.load_apps()
 
-    apps = load_apps()
+    def load_apps(self):
+        with open(
+            "data/installed_apps.json",
+            "r",
+            encoding="utf-8"
+        ) as file:
+            return json.load(file)
 
-    for name, path in apps.items():
+    def handle(self, command):
 
-        if name.lower() == app_name:
+        command = command.lower().strip()
 
-            try:
-                os.startfile(path)
-                print(f"Opened {name}")
-                return True
+        if not command.startswith(OPEN_WORDS):
+            return False
 
-            except Exception as e:
-                print(e)
-                return True
+        # Remove "open", "launch", etc.
+        app_name = command
 
-    return False
+        for word in OPEN_WORDS:
+            if command.startswith(word):
+                app_name = command[len(word):].strip()
+                break
+
+        best_score = 0
+        best_app = None
+
+        for name, path in self.apps.items():
+
+            app = name.lower()
+
+            score = similarity(app_name, app)
+
+            # Give bonus if the app name contains the user's words
+            if app_name in app:
+                score += 0.5
+
+            if score > best_score:
+                best_score = score
+                best_app = (name, path)
+
+        if best_app is None:
+            return False
+
+        # Don't open random apps if the match is poor
+        if best_score < 0.45:
+            return False
+
+        name, path = best_app
+
+        try:
+
+            os.startfile(path)
+
+            logger.skill(f"Opened {name}")
+
+            events.emit(
+                "app.opened",
+                {
+                    "name": name
+                }
+            )
+
+            return True
+
+        except Exception as e:
+
+            logger.error(str(e))
+            return True
+
+
+apps = AppsSkill()
