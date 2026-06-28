@@ -8,22 +8,16 @@ class Router:
 
     def route(self, command):
 
-        print("Router received:", command)
-        print("Registered skills:", len(self.skills))
-
         for skill in self.skills:
 
-            print("Trying:", skill)
-
             try:
+
                 if skill.handle(command):
-                    print("Handled!")
                     return True
 
             except Exception as e:
                 print(f"Router Error: {e}")
 
-        print("No skill handled the command.")
         return False
 
 

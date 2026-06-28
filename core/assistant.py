@@ -1,6 +1,8 @@
 from core.logger import logger
 from core.pipeline import pipeline
 from core.router import router
+from core.history import history
+
 
 from ai.chat import chat
 
@@ -11,6 +13,7 @@ class Assistant:
         logger.info("Assistant initialized.")
 
     def process(self, command):
+        history.add(command)
 
         # Pass through the pipeline
         command = pipeline.process(command)

@@ -4,6 +4,7 @@ from difflib import SequenceMatcher
 
 from core.logger import logger
 from core.events import events
+from core.state import state
 
 
 OPEN_WORDS = (
@@ -75,6 +76,8 @@ class AppsSkill:
         try:
 
             os.startfile(path)
+            state.current_app = name
+            state.last_command = command
 
             logger.skill(f"Opened {name}")
 

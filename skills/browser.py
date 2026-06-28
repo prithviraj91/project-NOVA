@@ -1,5 +1,10 @@
 import webbrowser
 
+from core.logger import logger
+from core.events import events
+from core.state import state
+
+
 WEBSITES = {
     "youtube": "https://www.youtube.com",
     "google": "https://www.google.com",
@@ -14,56 +19,107 @@ WEBSITES = {
 }
 
 
-def handle(command):
+class BrowserSkill:
 
-    command = command.lower().strip()
+    def handle(self, command):
 
-    # -----------------------
-    # Open Website
-    # -----------------------
+        command = command.lower().strip()
 
-    OPEN_WORDS = ("open", "launch", "go to")
+        # -----------------------
+        # Open Website
+        # -----------------------
 
-    for word in OPEN_WORDS:
-
-        if command.startswith(word):
-
-            website = command.replace(word, "", 1).strip()
-
-            if website in WEBSITES:
-
-                webbrowser.open(WEBSITES[website])
-
-                print(f"Opened {website}")
-
-                return True
-
-    # -----------------------
-    # Google Search
-    # -----------------------
-
-    if command.startswith("search google for"):
-
-        query = command.replace("search google for", "", 1).strip()
-
-        webbrowser.open(
-            "https://www.google.com/search?q=" + query.replace(" ", "+")
+        OPEN_WORDS = (
+            "open",
+            "launch",
+            "go to"
         )
 
-        return True
+        for word in OPEN_WORDS:
 
-    # -----------------------
-    # YouTube Search
-    # -----------------------
+            if command.startswith(word):
 
-    if command.startswith("search youtube for"):
+                website = command.replace(word, "", 1).strip()
 
-        query = command.replace("search youtube for", "", 1).strip()
+                if website in WEBSITES:
 
-        webbrowser.open(
-            "https://www.youtube.com/results?search_query=" + query.replace(" ", "+")
-        )
+                    webbrowser.open(WEBSITES[website])
+                    state.current_website = website
+                    state.last_command = command
 
-        return True
+                    logger.skill(f"Opened {website}")
 
-    return False
+                    events.emit(
+                        "browser.opened",
+                        {
+                            "website": website
+                        }
+                    )
+
+                    return True
+
+        # -----------------------
+        # Google Search
+        # -----------------------
+
+        if command.startswith("search google for"):
+
+            query = command.replace(
+                "search google for",
+                "",
+                1
+            ).strip()
+
+            webbrowser.open(
+                "https://www.google.com/search?q="
+                + query.replace(" ", "+")
+            )
+            state.last_google_search = query
+            state.last_command = command
+
+
+            logger.skill(f"Google search: {query}")
+
+            events.emit(
+                "google.search",
+                {
+                    "query": query
+                }
+            )
+
+            return True
+
+        # -----------------------
+        # YouTube Search
+        # -----------------------
+
+        if command.startswith("search youtube for"):
+
+            query = command.replace(
+                "search youtube for",
+                "",
+                1
+            ).strip()
+
+            webbrowser.open(
+                "https://www.youtube.com/results?search_query="
+                + query.replace(" ", "+")
+            )
+            state.last_youtube_search = query
+            state.last_command = command   
+
+            logger.skill(f"YouTube search: {query}")
+
+            events.emit(
+                "youtube.search",
+                {
+                    "query": query
+                }
+            )
+
+            return True
+
+        return False
+
+
+browser = BrowserSkill()
